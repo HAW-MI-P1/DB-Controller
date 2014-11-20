@@ -2,72 +2,112 @@ package controller;
 
 import java.sql.*;
 
+import controller.exception.ConnectionException;
+import controller.exception.IllegalArgumentException;
+import controller.exception.InternalErrorException;
+import controller.exception.NoSuchEntryException;
+
 public class DB {
+
+	// JDBC driver name and database URL
+	private final static String JDBC_DRIVER = "com.mysql.jdbc.Driver";
 	
-// JDBC driver name and database URL
-   static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
-   static final String DB_URL = "jdbc:mysql://localhost/test";
+	private Connection         conn = null;
+	private PreparedStatement  stmt = null;
+	
+	public DB(){}
+	
+	public void connect(String url, String user, String pass) throws ConnectionException {
+		if(url  == null || url.equals("") ) throw new IllegalArgumentException("Illegal url: "  + url);
+		if(user == null || user.equals("")) throw new IllegalArgumentException("Illegal user: " + user);
+		if(pass == null || pass.equals("")) throw new IllegalArgumentException("Illegal pass: " + pass);
+		
+		try {
+			// Register JDBC driver
+			Class.forName(DB.JDBC_DRIVER);
+			// Open a connection
+			this.conn = DriverManager.getConnection(url, user, pass);
 
-   //  Database credentials
-   static final String USER = "root";
-   static final String PASS = "root";
-   
-   public static void main(String[] args) {
-   Connection conn = null;
-   Statement stmt = null;
-   try{
-      //STEP 2: Register JDBC driver
-      Class.forName("com.mysql.jdbc.Driver");
+		} 
+		catch (ClassNotFoundException | SQLException e) 
+		{ throw new ConnectionException(); }
+	}
+	
+	public void close(){
+		try {
+			this.conn.close();
+		} catch (Exception se)
+		{ throw new InternalErrorException("Connection already closed!"); }// end finally try
+	}
+	
+	public void put(String key, String value){
+		if(key   == null || key.equals("")  ) throw new IllegalArgumentException("Illegal Key: " + key);
+		if(value == null || value.equals("")) throw new IllegalArgumentException("Illegal Key: " + value);
+		
+		try {
+			this.stmt = this.conn.prepareStatement("INSERT INTO api_results (k, v) VALUES (?, ?)");
+			this.stmt.setString(1, key);
+			this.stmt.setString(2, value);
+			this.stmt.executeUpdate();
+			
+			// Clean-up environment
+			this.stmt.close();
+		} catch (SQLException se) {
+			// Handle errors for JDBC
+			throw new InternalErrorException("Insert operation failed!");
+		} finally {
+			// finally block used to close resources
+			try {
+				if (this.stmt != null){
+					this.stmt.close();
+					
+				}
+			} catch (SQLException se2) 
+			{throw new InternalErrorException("Statement cannot be closed!");}// nothing we can do
+			
+		}// end try
+		
+	}
 
-      //STEP 3: Open a connection
-      System.out.println("Connecting to database...");
-      conn = DriverManager.getConnection(DB_URL,USER,PASS);
+	public String get(String key) {
+		if(key   == null || key.equals("")  ) throw new IllegalArgumentException("Illegal Key: " + key);
+		
+		try {
 
-      //STEP 4: Execute a query
-      System.out.println("Creating statement...");
-      stmt = conn.createStatement();
-      String sql;
-      sql = "SELECT id, first, last, age FROM Employees";
-      ResultSet rs = stmt.executeQuery(sql);
+			// Execute a query
+			this.stmt = this.conn.prepareStatement("SELECT v FROM api_results WHERE k=?");
+			this.stmt.setString(1, key);
+			
+			ResultSet rs  = this.stmt.executeQuery();
+			String result = null;
+			// Extract data from result set
+			while (rs.next()) {
+				// Retrieve by column name
+				result = rs.getString("v");
+				
+			}
+			// Clean-up environment
+			rs.close();
+			this.stmt.close();
+			
+			if(result == null || result.equals(""))
+			{ throw new NoSuchEntryException(key); }
+			
+			return result;
+		} catch (SQLException se) {
+			throw new InternalErrorException("Query operation failed!");
+			
+		} finally {
+			// finally block used to close resources
+			try {
+				if (this.stmt != null){
+					this.stmt.close();
+				}
+			} catch (SQLException se2) 
+			{ throw new InternalErrorException("Statement cannot be closed!"); }// nothing we can do
+			
+		}// end try
+		
+	}
 
-      //STEP 5: Extract data from result set
-      while(rs.next()){
-         //Retrieve by column name
-         int id  = rs.getInt("id");
-         int age = rs.getInt("age");
-         String first = rs.getString("first");
-         String last = rs.getString("last");
-
-         //Display values
-         System.out.print("ID: " + id);
-         System.out.print(", Age: " + age);
-         System.out.print(", First: " + first);
-         System.out.println(", Last: " + last);
-      }
-      //STEP 6: Clean-up environment
-      rs.close();
-      stmt.close();
-      conn.close();
-   }catch(SQLException se){
-      //Handle errors for JDBC
-      se.printStackTrace();
-   }catch(Exception e){
-      //Handle errors for Class.forName
-      e.printStackTrace();
-   }finally{
-      //finally block used to close resources
-      try{
-         if(stmt!=null)
-            stmt.close();
-      }catch(SQLException se2){
-      }// nothing we can do
-      try{
-         if(conn!=null)
-            conn.close();
-      }catch(SQLException se){
-         se.printStackTrace();
-      }//end finally try
-   }//end try
-   System.out.println("Goodbye!");
-   }
 }
