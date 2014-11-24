@@ -1,4 +1,4 @@
-package test;
+package de.haw.db;
 
 import static org.junit.Assert.*;
 
@@ -6,19 +6,19 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import controller.DB;
-import controller.exception.IllegalArgumentException;
-import controller.exception.InternalErrorException;
+import de.haw.db.DBImpl;
+import de.haw.db.exception.IllegalArgumentException;
+import de.haw.db.exception.InternalErrorException;
 
 public class PutTest {
-	private DB db;
+	private DBImpl db;
 
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
 	public void setUp() throws Exception {
-		this.db = new DB();
+		this.db = new DBImpl();
 		this.db.connect("jdbc:mysql://localhost/mip", "root", "root");
 	}
 	
@@ -34,16 +34,16 @@ public class PutTest {
 
 	@Test
 	public void testPutSuccess() {
-		double keyHash = Math.random();
-		db.put("key" + keyHash, "value");
+		int keyHash = (int) (Math.random() * 1000000);
+		db.put(keyHash, "value");
 	}
 	
 	@Test
 	public void testPutFailSameKey() {
 		try {
-			double keyHash = Math.random();
-			db.put("key" + keyHash, "value");
-			db.put("key" + keyHash, "value");
+			int keyHash = (int) (Math.random() * 1000000);
+			db.put(keyHash, "value");
+			db.put(keyHash, "value");
 			fail();
 		} 
 		catch (InternalErrorException e) {}
@@ -52,16 +52,7 @@ public class PutTest {
 	@Test
 	public void testPutFailKeyNull() {
 		try {
-			db.put(null, "value");
-			fail();
-		} 
-		catch (IllegalArgumentException e) {}
-	}
-	
-	@Test
-	public void testPutFailKeyEmpty() {
-		try {
-			db.put("", "value");
+			db.put(0, "value");
 			fail();
 		} 
 		catch (IllegalArgumentException e) {}
@@ -70,8 +61,8 @@ public class PutTest {
 	@Test
 	public void testPutFailValueNull() {
 		try {
-			double keyHash = Math.random();
-			db.put("key" + keyHash, null);
+			int keyHash = (int) (Math.random() * 1000000);
+			db.put(keyHash, null);
 			fail();
 		} 
 		catch (IllegalArgumentException e) {}
@@ -80,8 +71,8 @@ public class PutTest {
 	@Test
 	public void testPutFailValueEmpty() {
 		try {
-			double keyHash = Math.random();
-			db.put("key" + keyHash, "");
+			int keyHash = (int) (Math.random() * 1000000);
+			db.put(keyHash, "");
 			fail();
 		} 
 		catch (IllegalArgumentException e) {}

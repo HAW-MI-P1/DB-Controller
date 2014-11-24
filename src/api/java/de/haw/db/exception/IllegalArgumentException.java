@@ -1,4 +1,4 @@
-package controller.exception;
+package de.haw.db.exception;
 
 public class IllegalArgumentException extends RuntimeException{
 	

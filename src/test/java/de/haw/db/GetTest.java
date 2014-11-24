@@ -1,4 +1,4 @@
-package test;
+package de.haw.db;
 
 import static org.junit.Assert.*;
 
@@ -6,19 +6,19 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import controller.DB;
-import controller.exception.IllegalArgumentException;
-import controller.exception.NoSuchEntryException;
+import de.haw.db.DBImpl;
+import de.haw.db.exception.IllegalArgumentException;
+import de.haw.db.exception.NoSuchEntryException;
 
 public class GetTest {
-	private DB db;
+	private DBImpl db;
 
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
 	public void setUp() throws Exception {
-		this.db = new DB();
+		this.db = new DBImpl();
 		this.db.connect("jdbc:mysql://localhost/mip", "root", "root");
 	}
 	
@@ -35,10 +35,10 @@ public class GetTest {
 	@Test
 	public void testGetSuccess() {
 		try {
-			double keyHash = Math.random();
-			db.put("key" + keyHash, "value");
+			int keyHash = (int) (Math.random() * 1000000);
+			db.put(keyHash, "value");
 			
-			String value = db.get("key" + keyHash);
+			String value = db.get(keyHash);
 			assertTrue( value.equals("value") );
 		} 
 		catch (Exception e)
@@ -48,16 +48,7 @@ public class GetTest {
 	@Test
 	public void testGetFailKeyNull() {
 		try {
-			db.get(null);
-			fail();
-		} 
-		catch (IllegalArgumentException e) {};
-	}
-	
-	@Test
-	public void testGetFailKeyEmpty() {
-		try {
-			db.get("");
+			db.get(0);
 			fail();
 		} 
 		catch (IllegalArgumentException e) {};
@@ -66,7 +57,7 @@ public class GetTest {
 	@Test
 	public void testGetFailNoSuchEntry() {
 		try {
-			db.get("NoSuchEntry");
+			db.get(1);
 			fail();
 		} 
 		catch (NoSuchEntryException e) {};

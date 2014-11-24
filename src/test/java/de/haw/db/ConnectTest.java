@@ -1,7 +1,7 @@
 /**
  * 
  */
-package test;
+package de.haw.db;
 
 import static org.junit.Assert.fail;
 
@@ -9,23 +9,23 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import controller.DB;
-import controller.exception.ConnectionException;
-import controller.exception.IllegalArgumentException;
+import de.haw.db.DBImpl;
+import de.haw.db.exception.ConnectionException;
+import de.haw.db.exception.IllegalArgumentException;
 
 /**
  * @author Florian
  *
  */
-public class ConnectionTest {
-	private DB db;
+public class ConnectTest {
+	private DBImpl db;
 	
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
 	public void setUp() throws Exception {
-		this.db = new DB();
+		this.db = new DBImpl();
 	}
 	
 	/**
